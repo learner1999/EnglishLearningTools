@@ -339,6 +339,17 @@ The student hid in an archway nearby where he could watch and hear everything th
 最近有个学生看见两个工人在大学校门外用风钻干活，马上打电话报告警察，说有两个学生装扮成工人，正在用风钻破坏路面。挂上电话后，他又马上来到工人那儿，告诉他们若有个警察来让他们走开，不要把他当回事。还对工人说，有个学生常装扮成警察无聊地同别人开玩笑。警察与工人都对那个学生事先通报情况表示感谢。
 那学生躲在附近一拱形门廊里，在那儿可以看见、听到现场发生的一切。果然，警察来了，有礼貌地请工人离开此地。但其中一个工人粗鲁地回了几句，于是警察威胁要强行使他们离开。工人说，悉听尊便，警察去打电话叫人。一会儿工夫，又来了4个警察，规劝工人离开。由于工人拒绝停下手中的活，警察想夺风钻。两个工人奋力抗争，其中一个发了火。威胁说要去叫警察。警察听后讥讽地说，这大可不必，因为他俩已被逮捕了。其中一个工人装模作样地问道，在被带往警察局之前，是否可以打一个电话。警察同意了，陪他来到一个投币电话前。当他看到那个工人真的是给警察挂电话，才恍然大悟，原来他们都成了一场骗局的受害者。`
         ]
+    },
+    {
+        "name": "小猪佩奇",
+        "titles": [
+            "第1季第1集 泥坑"
+        ],
+        "englishArticles": [
+            "This is my little brother, George.\nThis is Mummy Pig.\nAnd this is Daddy Pig.\nPeppa pig.\nMuddy Puddles.\nIt is raining today.\nSo, Peppa and George cannot play outside.\nDaddy, it's stopped raining.\nCan we go out to play?\nAlright, run along you two.\nPeppa loves jumping in muddy puddles.\nI love muddy puddles.\nPeppa. lf you jump in muddy puddles, you must wear your boots.\nSorry, Mummy.\nGeorge likes to jump in muddy puddles, too.\nGeorge. If you jump in muddy puddles, you must wear your boots.\nPeppa likes to look after her little brother, George.\nGeorge, let's find some more puddles.\nPeppa and George are having a lot of fun.\nPeppa has found a little puddle.\nGeorge has found a big puddle.\nLook, George. There's a really big puddle.\nGeorge wants to jump into the big puddle first.\nStop, George.l must check if it's safe for you.\nGood. It is safe for you.\nSorry, George. It's only mud.\nPeppa and George love jumping in muddy puddles.\nCome on, George. Let's go and show Daddy.\nGoodness me.\nDaddy. Daddy.Guess what we've been doing.\nLet me think...\nHave you been watching television?\nNo. No. Daddy.\nHave you just had a bath?\nNo. No.\nI know. You've been jumping in muddy puddles.\nYes. Yes. Daddy. We've been jumping in muddy puddles.\nHo. Ho. And look at the mess you're in.\nOh, well, it's only mud.\nLet's clean up quickly before Mummy sees the mess.\nDaddy, when we've cleaned up, will you and Mummy come and play, too?\nYes, we can all play in the garden.\nPeppa and George are wearing their boots.\nMummy and Daddy are wearing their boots.\nPeppa loves jumping up and down in muddy puddles.\nEveryone loves jumping up and down in muddy puddles.\nOh, Daddy pig,look at the mess you're in.\nIt’s only mud."
+        ],
+        "chineseTranslations": [
+            "这是我的弟弟乔治。\n这是我的妈妈。\n这是我的爸爸。\n小猪佩奇\n泥坑\n今天是雨天。\n所以佩奇和乔治不能在外边玩。\n爸爸，现在雨停了。\n我们能出去玩吗？\n好的，你们两个去玩吧。\n佩奇喜欢在泥坑里玩。\n我喜欢在泥坑里玩。\n佩奇，如果你要在泥坑里跳，你必须要穿上靴子才行。\n对不起，妈妈。\n乔治也喜欢在泥坑里跳。\n乔治，如果你想在泥坑里跳，你必须穿上靴子才行。\n佩奇喜欢照顾她的弟弟乔治。\n乔治，我们再去找几个泥坑跳吧。\n佩奇和乔治玩得很开心。\n佩奇找到了一个小泥坑。\n乔治找到了一个大泥坑。\n你看，乔治。那里有一个很大的泥坑。\n乔治想第一个跳到泥坑里去玩。\n等一下，乔治。我得检查一下这里安不安全。\n很好，你可以放心地玩啦。(对你很安全)\n对不起，乔治。只是些泥而已。\n佩奇和乔治喜欢在泥坑里跳来跳去。\n走，乔治。我们去给爸爸看看。\n我的老天呀。\n爸爸，爸爸，你猜猜我们刚才干了些什么。\n让我想一想。。。\n你们刚才看电视了？\n不对，不对，爸爸。\n你们刚才洗澡了？\n不对。不对。\n我知道了。你们刚才在泥坑里跳来跳去。\n没错，没错，爸爸。我们刚才在泥坑里跳来跳去。\n呵呵，看看你们弄得多脏呀。\n哦，没事，只是些泥而已。\n快清理干净，别让妈妈看到那么脏。（在妈妈看到前弄干净）\n爸爸，我们清理干净以后，你和妈妈也会一起来玩吗？\n是的，我们都可以在花园玩。\n佩奇和乔治穿着他们的靴子。\n猪妈妈和猪爸爸也穿着他们的靴子。\n佩奇喜欢在泥坑里跳来跳去。\n每个人都喜欢在泥坑里跳来跳去。\n哦，猪爸爸，瞧瞧你身上多脏呀。\n只是些泥而已。"
+        ]
     }
-
 ];
