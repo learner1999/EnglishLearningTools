@@ -126,6 +126,8 @@
             <textarea id="englishArticle" rows="4" placeholder="在这里输入英文文章.请注意,中英文文章中的每个句子都应按相应的顺序用句号或感叹号或问号分隔,否则可能会出现不匹配的问题."></textarea>
             <label for="chineseTranslation">中文翻译:</label><br>
             <textarea id="chineseTranslation" rows="4" placeholder="在这里输入中文翻译."></textarea>
+            <input type="checkbox" id="splitByNewline" style="margin-right: 5px;">
+            <label for="splitByNewline">按换行符拆分句子</label>
             <button onclick="startExercise()">开始回译练习</button>
 
             <select id="materialSelect" style="display: block; margin-right: 10px;" onchange="handleMaterialChange(this)">
@@ -232,9 +234,14 @@
                 return;
             }
 
-            // 将文章拆分成句子，并保存到数组中
-            originalEnglishSentences = englishArticle.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== ""); // 假设句子以句号分隔
-            originalChineseTranslations = chineseTranslation.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== ""); // 假设中文翻译以句号分隔
+            // 根据复选框状态选择拆分方式
+            if (document.getElementById("splitByNewline").checked) {
+                originalEnglishSentences = englishArticle.split('\n').filter(sentence => sentence.trim() !== "");
+                originalChineseTranslations = chineseTranslation.split('\n').filter(sentence => sentence.trim() !== "");
+            } else {
+                originalEnglishSentences = englishArticle.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== "");
+                originalChineseTranslations = chineseTranslation.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== "");
+            }
 
             // 清空前一次练习的内容
             wordArea.innerHTML = '';
