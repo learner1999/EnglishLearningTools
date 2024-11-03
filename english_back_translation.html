@@ -116,6 +116,29 @@
             position: relative; /* 为伪元素定位 */
             margin-top: 10px;
         }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            display: inline-block;
+            margin-left: 5px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -124,7 +147,7 @@
         <div class="area" id="inputArea">
             <label for="englishArticle">英文文章:</label><br>
             <textarea id="englishArticle" rows="4" placeholder="在这里输入英文文章.请注意,中英文文章中的每个句子都应按相应的顺序用句号或感叹号或问号分隔,否则可能会出现不匹配的问题."></textarea>
-            <label for="chineseTranslation">中文翻译:</label><br>
+            <label for="chineseTranslation">中文翻译（留空会自动翻译）:</label><br>
             <textarea id="chineseTranslation" rows="4" placeholder="在这里输入中文翻译."></textarea>
             <input type="checkbox" id="splitByNewline" style="margin-right: 5px;">
             <label for="splitByNewline">按换行符拆分句子</label>
@@ -137,6 +160,11 @@
             <select id="articleSelect" style="display: block;" onchange="handleSelectChange(this)">
                 <option value="" selected>请先选择教材</option>
             </select>
+
+            <div id="loadingIndicator" style="display: none; margin-top: 10px;">
+                <div class="loading-spinner"></div>
+                <span class="loading-text">正在翻译中...</span>
+            </div>
         </div>
     </div>
 
@@ -224,23 +252,52 @@
         }
 
         // 开始练习
-        function startExercise() {
-            var englishArticle = document.getElementById("englishArticle").value.trim(); // 获取输入的英文文章
-            var chineseTranslation = document.getElementById("chineseTranslation").value.trim(); // 获取输入的中文翻译
+        async function startExercise() {
+            var englishArticle = document.getElementById("englishArticle").value.trim();
+            var chineseTranslation = document.getElementById("chineseTranslation").value.trim();
             var wordArea = document.getElementById("wordArea");
             var translationArea = document.getElementById("translationArea");
+            var loadingIndicator = document.getElementById("loadingIndicator");
 
-            if (englishArticle === '' || chineseTranslation === '') {
+            if (englishArticle === '') {
                 return;
             }
 
             // 根据复选框状态选择拆分方式
             if (document.getElementById("splitByNewline").checked) {
                 originalEnglishSentences = englishArticle.split('\n').filter(sentence => sentence.trim() !== "");
-                originalChineseTranslations = chineseTranslation.split('\n').filter(sentence => sentence.trim() !== "");
             } else {
                 originalEnglishSentences = englishArticle.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== "");
-                originalChineseTranslations = chineseTranslation.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== "");
+            }
+
+            // 如果没有中文翻译，则在线获取翻译
+            if (chineseTranslation === '') {
+                loadingIndicator.style.display = 'block'; // 显示加载提示
+                try {
+                    originalChineseTranslations = [];
+                    // 翻译当前句子
+                    const translation = await translateText(originalEnglishSentences[currentSentenceIndex]);
+                    if (translation) {
+                        originalChineseTranslations[currentSentenceIndex] = translation;
+                    } else {
+                        alert('翻译服务出错，请稍后重试');
+                        loadingIndicator.style.display = 'none'; // 隐藏加载提示
+                        return;
+                    }
+                } catch (error) {
+                    console.error('翻译出错:', error);
+                    alert('翻译服务出错，请稍后重试');
+                    loadingIndicator.style.display = 'none'; // 隐藏加载提示
+                    return;
+                } finally {
+                    loadingIndicator.style.display = 'none'; // 隐藏加载提示
+                }
+            } else {
+                if (document.getElementById("splitByNewline").checked) {
+                    originalChineseTranslations = chineseTranslation.split('\n').filter(sentence => sentence.trim() !== "");
+                } else {
+                    originalChineseTranslations = chineseTranslation.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== "");
+                }
             }
 
             // 清空前一次练习的内容
@@ -293,23 +350,21 @@
         }
 
         // 上一句
-        function prevSentence() {
+        async function prevSentence() {
             stopReading();
             if (currentSentenceIndex > 0) {
                 currentSentenceIndex--;
-                startExercise();
-                // 更新内容...
+                await startExercise();
                 updateSentenceIndexDisplay();
             }
         }
 
         // 下一句
-        function nextSentence() {
+        async function nextSentence() {
             stopReading();
             if (currentSentenceIndex < originalEnglishSentences.length - 1) {
                 currentSentenceIndex++;
-                startExercise();
-                // 更新内容...
+                await startExercise();
                 updateSentenceIndexDisplay();
             }
         }
@@ -496,6 +551,27 @@
                     option.setAttribute("data-translation", selectedMaterial.chineseTranslations[i]); // 保存中文翻译
                     articleSelect.appendChild(option);
                 }
+            }
+        }
+
+        async function translateText(text) {
+            try {
+                const response = await fetch('https://deeplx.missuo.ru/translate?key=JzdVYBzoa_-8UYazL1MPlJbH9_s90zRfkhN57GaBLKw=', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        source_lang: 'EN',
+                        target_lang: 'ZH'
+                    })
+                });
+                const data = await response.json();
+                return data.data;
+            } catch (error) {
+                console.error('翻译出错:', error);
+                return null;
             }
         }
     </script>
