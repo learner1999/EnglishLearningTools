@@ -139,6 +139,27 @@
             margin-left: 5px;
             color: #666;
         }
+
+        .breakdown-step {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .breakdown-step.active {
+            display: block;
+        }
+
+        .step-chinese {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .step-cards {
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -152,6 +173,7 @@
             <input type="checkbox" id="splitByNewline" style="margin-right: 5px;">
             <label for="splitByNewline">按换行符拆分句子</label>
             <button onclick="startExercise()">开始回译练习</button>
+            <button onclick="showSettings()">设置</button>
 
             <select id="materialSelect" style="display: block; margin-right: 10px;" onchange="handleMaterialChange(this)">
                 <option value="" selected>选择教材</option>
@@ -176,6 +198,7 @@
                 <button onclick="stopReading()">停止</button>
                 <button onclick="collectCurrentSentence()">收藏句子</button>
                 <button onclick="showCollectedSentences()">查看收藏</button>
+                <button onclick="showSettings()">设置</button>
             </div>
         </div>
 
@@ -190,6 +213,7 @@
             <button onclick="speakCurrentSentenceSlow()">慢速朗读(Ctrl+D)</button>
             <button onclick="nextSentence()">&gt;后一句(Ctrl+F)</button>
             <button onclick="showAnswer()">显示答案(Ctrl+Q)</button>
+            <button onclick="breakdownSentence()">拆句练习</button>
         </div>
         
         <!-- 中文翻译区域 -->
@@ -200,6 +224,11 @@
         <div class="area" id="wordArea"></div>
         <!-- 错误提示区域 -->
         <div class="area error" id="errorArea"></div>
+        <!-- 拆句练习区域 -->
+        <div class="area" id="breakdownArea" style="display: none;">
+            <h4>拆句练习</h4>
+            <div id="breakdownSteps"></div>
+        </div>
     </div>
 
     <div class="discreet-text">
@@ -213,6 +242,31 @@
         <div id="collectedSentencesList"></div>
         <button onclick="closeCollectionModal()" style="margin-top: 10px;">关闭</button>
         <button onclick="clearCollectedSentences()" style="margin-top: 10px; margin-left: 10px;">清空收藏</button>
+    </div>
+
+    <!-- 添加设置弹窗 -->
+    <div id="settingsModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 1000;">
+        <h3>API设置</h3>
+        <div style="margin: 15px 0;">
+            <label for="baseUrl">Base URL:</label><br>
+            <input type="text" id="baseUrl" style="width: 300px; padding: 5px;" 
+                placeholder="例如: https://api.openai.com/v1">
+        </div>
+        <div style="margin: 15px 0;">
+            <label for="apiKey">API Key:</label><br>
+            <input type="password" id="apiKey" style="width: 300px; padding: 5px;" 
+                placeholder="输入你的API Key">
+        </div>
+        <div style="margin: 15px 0;">
+            <label for="modelName">Model:</label><br>
+            <input type="text" id="modelName" style="width: 300px; padding: 5px;" 
+                placeholder="例如: gpt-4o">
+        </div>
+        <div style="margin-top: 20px;">
+            <button onclick="saveSettings()">保存</button>
+            <button onclick="closeSettings()" style="margin-left: 10px;">取消</button>
+        </div>
     </div>
 
     <!-- JavaScript 脚本 -->
@@ -678,6 +732,211 @@
         function clearCollectedSentences() {
             collectedSentences = [];
             updateCollectedSentencesList();
+        }
+
+        let currentBreakdownStep = 0;
+        let breakdownSteps = [];
+
+        // API设置相关的变量
+        let apiSettings = {
+            baseUrl: 'https://api.openai.com/v1',
+            apiKey: '',
+            model: 'gpt-4o'
+        };
+
+        // 初始化时加载保存的设置
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedSettings = localStorage.getItem('apiSettings');
+            if (savedSettings) {
+                apiSettings = JSON.parse(savedSettings);
+            }
+        });
+
+        // 显示设置弹窗
+        function showSettings() {
+            const modal = document.getElementById('settingsModal');
+            document.getElementById('baseUrl').value = apiSettings.baseUrl;
+            document.getElementById('apiKey').value = apiSettings.apiKey;
+            document.getElementById('modelName').value = apiSettings.model;
+            modal.style.display = 'block';
+        }
+
+        // 关闭设置弹窗
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // 保存设置
+        function saveSettings() {
+            apiSettings.baseUrl = document.getElementById('baseUrl').value.trim();
+            apiSettings.apiKey = document.getElementById('apiKey').value.trim();
+            apiSettings.model = document.getElementById('modelName').value.trim();
+            
+            // 保存到localStorage
+            localStorage.setItem('apiSettings', JSON.stringify(apiSettings));
+            
+            closeSettings();
+            alert('设置已保存');
+        }
+
+        // 修改breakdownSentence函数，使用设置中的API配置
+        async function breakdownSentence() {
+            if (!apiSettings.apiKey) {
+                alert('请先在设置中配置API Key');
+                showSettings();
+                return;
+            }
+
+            const currentSentence = originalEnglishSentences[currentSentenceIndex];
+            const currentChinese = originalChineseTranslations[currentSentenceIndex];
+            
+            document.getElementById("loadingIndicator").style.display = 'block';
+            
+            try {
+                const response = await fetch(`${apiSettings.baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiSettings.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: apiSettings.model,
+                        messages: [
+                            {
+                                role: "system",
+                                content: "你是一个英语教学助手，需要帮助将长句子拆分成更容易理解的步骤。"
+                            },
+                            {
+                                role: "user",
+                                content: `请将以下句子拆分成循序渐进的学习步骤：
+                                英文：${currentSentence}
+                                中文：${currentChinese}
+                                
+                                要求：
+                                1. 从最简单的词组开始
+                                2. 逐步扩展到完整句子
+                                3. 每一步都要包含之前步骤的内容
+                                4. 返回格式必须是一个JSON字符串，格式如下：
+                                {
+                                    "steps": [
+                                        {"english": "部分英文", "chinese": "对应中文"},
+                                        {"english": "更多英文", "chinese": "对应更多中文"},
+                                        {"english": "完整英文", "chinese": "完整中文"}
+                                    ]
+                                }`
+                            }
+                        ]
+                    })
+                });
+                
+                const data = await response.json();
+                // 解析ChatGPT返回的文本内容
+                let result;
+                try {
+                    // 尝试直接解析返回的内容
+                    result = JSON.parse(data.choices[0].message.content);
+                } catch (e) {
+                    // 如果解析失败，可能需要进行一些清理
+                    const content = data.choices[0].message.content;
+                    // 尝试提取JSON部分（假设返回的内容中包含了JSON字符串）
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        result = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error('无法解析返回的内容');
+                    }
+                }
+                
+                breakdownSteps = result.steps;
+                
+                // 初始化拆句练习界面
+                initializeBreakdown();
+                
+                // 隐藏原有的练习区域，显示拆句练习区域
+                document.getElementById("wordArea").style.display = 'none';
+                document.getElementById("translationArea").style.display = 'none';
+                document.getElementById("breakdownArea").style.display = 'block';
+                
+            } catch (error) {
+                console.error('拆句失败:', error);
+                alert('拆句服务出错，请稍后重试');
+            } finally {
+                document.getElementById("loadingIndicator").style.display = 'none';
+            }
+        }
+
+        function initializeBreakdown() {
+            const breakdownStepsDiv = document.getElementById("breakdownSteps");
+            breakdownStepsDiv.innerHTML = '';
+            currentBreakdownStep = 0;
+            
+            breakdownSteps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = `breakdown-step ${index === 0 ? 'active' : ''}`;
+                stepDiv.id = `step-${index}`;
+                
+                const chineseDiv = document.createElement('div');
+                chineseDiv.className = 'step-chinese';
+                chineseDiv.textContent = step.chinese;
+                
+                const cardsDiv = document.createElement('div');
+                cardsDiv.className = 'step-cards';
+                
+                // 创建打乱顺序的单词卡片
+                const words = step.english.split(' ');
+                shuffleArray(words).forEach(word => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.textContent = word;
+                    card.onclick = () => addToStepTranslation(card, index);
+                    cardsDiv.appendChild(card);
+                });
+                
+                const translationDiv = document.createElement('div');
+                translationDiv.className = 'step-translation';
+                translationDiv.id = `translation-${index}`;
+                
+                stepDiv.appendChild(chineseDiv);
+                stepDiv.appendChild(cardsDiv);
+                stepDiv.appendChild(translationDiv);
+                breakdownStepsDiv.appendChild(stepDiv);
+            });
+        }
+
+        function addToStepTranslation(card, stepIndex) {
+            const translationDiv = document.getElementById(`translation-${stepIndex}`);
+            const newCard = card.cloneNode(true);
+            newCard.onclick = () => removeFromStepTranslation(newCard, stepIndex);
+            translationDiv.appendChild(newCard);
+            card.remove();
+            
+            checkStepAnswer(stepIndex);
+        }
+
+        function removeFromStepTranslation(card, stepIndex) {
+            const cardsDiv = document.querySelector(`#step-${stepIndex} .step-cards`);
+            const newCard = card.cloneNode(true);
+            newCard.onclick = () => addToStepTranslation(newCard, stepIndex);
+            cardsDiv.appendChild(newCard);
+            card.remove();
+            
+            checkStepAnswer(stepIndex);
+        }
+
+        function checkStepAnswer(stepIndex) {
+            const translationDiv = document.getElementById(`translation-${stepIndex}`);
+            const currentTranslation = Array.from(translationDiv.children)
+                .map(card => card.textContent)
+                .join(' ');
+                
+            if (currentTranslation === breakdownSteps[stepIndex].english) {
+                // 答案正确，显示下一步
+                if (stepIndex < breakdownSteps.length - 1) {
+                    setTimeout(() => {
+                        document.getElementById(`step-${stepIndex + 1}`).classList.add('active');
+                    }, 500);
+                }
+            }
         }
     </script>
 </body>
