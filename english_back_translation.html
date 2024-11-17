@@ -255,6 +255,43 @@
         // 开始练习
         async function startExercise() {
             var englishArticle = document.getElementById("englishArticle").value.trim();
+            
+            // 预处理文本，保护常见缩写
+            englishArticle = englishArticle
+                .replace(/Mr\./g, 'Mr#')
+                .replace(/Mrs\./g, 'Mrs#')
+                .replace(/Ms\./g, 'Ms#')
+                .replace(/Dr\./g, 'Dr#')
+                .replace(/Prof\./g, 'Prof#')
+                .replace(/etc\./g, 'etc#')
+                .replace(/i\.e\./g, 'i#e#')
+                .replace(/e\.g\./g, 'e#g#')
+                .replace(/vs\./g, 'vs#')
+                .replace(/U\.S\./g, 'U#S#')
+                .replace(/U\.K\./g, 'U#K#');
+
+            // 根据复选框状态选择拆分方式
+            if (document.getElementById("splitByNewline").checked) {
+                originalEnglishSentences = englishArticle.split('\n').filter(sentence => sentence.trim() !== "");
+            } else {
+                originalEnglishSentences = englishArticle.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== "");
+            }
+
+            // 还原被替换的缩写
+            originalEnglishSentences = originalEnglishSentences.map(sentence => 
+                sentence.replace(/Mr#/g, 'Mr.')
+                    .replace(/Mrs#/g, 'Mrs.')
+                    .replace(/Ms#/g, 'Ms.')
+                    .replace(/Dr#/g, 'Dr.')
+                    .replace(/Prof#/g, 'Prof.')
+                    .replace(/etc#/g, 'etc.')
+                    .replace(/i#e#/g, 'i.e.')
+                    .replace(/e#g#/g, 'e.g.')
+                    .replace(/vs#/g, 'vs.')
+                    .replace(/U#S#/g, 'U.S.')
+                    .replace(/U#K#/g, 'U.K.')
+            );
+
             var chineseTranslation = document.getElementById("chineseTranslation").value.trim();
             var wordArea = document.getElementById("wordArea");
             var translationArea = document.getElementById("translationArea");
@@ -262,13 +299,6 @@
 
             if (englishArticle === '') {
                 return;
-            }
-
-            // 根据复选框状态选择拆分方式
-            if (document.getElementById("splitByNewline").checked) {
-                originalEnglishSentences = englishArticle.split('\n').filter(sentence => sentence.trim() !== "");
-            } else {
-                originalEnglishSentences = englishArticle.split(/[.!?。？！]\s*/).filter(sentence => sentence.trim() !== "");
             }
 
             // 如果没有中文翻译，则在线获取翻译
