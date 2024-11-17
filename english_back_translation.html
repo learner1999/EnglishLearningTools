@@ -172,8 +172,10 @@
         <div class="area navigation">
             <div>
                 <button onclick="returnToInitial()">&lt; 返回</button>
-                <button onclick="resetCurrentSentence()">重置当前句子</button> <!-- 新增按钮 -->
+                <button onclick="resetCurrentSentence()">重置当前句子</button>
                 <button onclick="stopReading()">停止</button>
+                <button onclick="collectCurrentSentence()">收藏句子</button>
+                <button onclick="showCollectedSentences()">查看收藏</button>
             </div>
         </div>
 
@@ -203,6 +205,14 @@
     <div class="discreet-text">
         <p>&copy; 2024 机智的常总 (<a href="https://github.com/cjlaaa/EnglishLearningTools">GitHub</a> | <a href="index.html">返回主页</a>)</p>
         <p>本网页内容根据 <a rel="license" href="https://opensource.org/licenses/MIT">MIT 许可协议</a> 进行发布。</p>
+    </div>
+
+    <div id="collectionModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto;">
+        <h3>收藏的句子</h3>
+        <div id="collectedSentencesList"></div>
+        <button onclick="closeCollectionModal()" style="margin-top: 10px;">关闭</button>
+        <button onclick="clearCollectedSentences()" style="margin-top: 10px; margin-left: 10px;">清空收藏</button>
     </div>
 
     <!-- JavaScript 脚本 -->
@@ -617,6 +627,57 @@
             var errorArea = document.getElementById("errorArea");
             errorArea.innerText = "原句: " + originalEnglishSentences[currentSentenceIndex].trim();
             errorArea.style.color = "blue";
+        }
+
+        // 存储收藏句子的数组
+        let collectedSentences = [];
+
+        // 收藏当前句子
+        function collectCurrentSentence() {
+            const currentSentence = {
+                english: originalEnglishSentences[currentSentenceIndex].trim(),
+                chinese: originalChineseTranslations[currentSentenceIndex].trim(),
+                index: currentSentenceIndex + 1
+            };
+            collectedSentences.push(currentSentence);
+            updateCollectedSentencesList();
+        }
+
+        // 更新收藏句子的列表
+        function updateCollectedSentencesList() {
+            const collectedSentencesList = document.getElementById("collectedSentencesList");
+            collectedSentencesList.innerHTML = '';
+            collectedSentences.forEach((sentence, index) => {
+                const li = document.createElement("li");
+                li.innerText = `第${sentence.index}句: ${sentence.english} -> ${sentence.chinese}`;
+                // li.setAttribute('onclick', 'removeCollectedSentence(this)');
+                collectedSentencesList.appendChild(li);
+            });
+        }
+
+        // 移除收藏的句子
+        function removeCollectedSentence(li) {
+            const index = li.getAttribute('data-index');
+            collectedSentences.splice(index - 1, 1);
+            updateCollectedSentencesList();
+        }
+
+        // 查看收藏的句子
+        function showCollectedSentences() {
+            const collectionModal = document.getElementById("collectionModal");
+            collectionModal.style.display = 'block';
+        }
+
+        // 关闭收藏句子的弹窗
+        function closeCollectionModal() {
+            const collectionModal = document.getElementById("collectionModal");
+            collectionModal.style.display = 'none';
+        }
+
+        // 清空收藏的句子
+        function clearCollectedSentences() {
+            collectedSentences = [];
+            updateCollectedSentencesList();
         }
     </script>
 </body>
