@@ -160,6 +160,31 @@
         .step-cards {
             margin-top: 5px;
         }
+
+        .step-translation {
+            min-height: 40px;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .translation-error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .card.wrong {
+            animation: shake 0.5s;
+            background-color: #ffe6e6;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
@@ -905,12 +930,44 @@
 
         function addToStepTranslation(card, stepIndex) {
             const translationDiv = document.getElementById(`translation-${stepIndex}`);
-            const newCard = card.cloneNode(true);
-            newCard.onclick = () => removeFromStepTranslation(newCard, stepIndex);
-            translationDiv.appendChild(newCard);
-            card.remove();
+            const currentTranslation = Array.from(translationDiv.children)
+                .map(card => card.textContent)
+                .join(' ');
             
-            checkStepAnswer(stepIndex);
+            // 检查添加新单词后是否会导致错误
+            const newTranslation = (currentTranslation + ' ' + card.textContent).trim();
+            const targetEnglish = breakdownSteps[stepIndex].english;
+            
+            if (targetEnglish.startsWith(newTranslation)) {
+                // 可以添加这个单词
+                const newCard = card.cloneNode(true);
+                newCard.onclick = () => removeFromStepTranslation(newCard, stepIndex);
+                translationDiv.appendChild(newCard);
+                card.remove();
+                
+                checkStepAnswer(stepIndex);
+            } else {
+                // 显示错误提示
+                card.classList.add('wrong');
+                setTimeout(() => {
+                    card.classList.remove('wrong');
+                }, 500);
+                
+                // 获取或创建错误提示元素
+                let errorDiv = translationDiv.nextElementSibling;
+                if (!errorDiv || !errorDiv.classList.contains('translation-error')) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'translation-error';
+                    translationDiv.parentNode.insertBefore(errorDiv, translationDiv.nextSibling);
+                }
+                errorDiv.textContent = '这个单词不应该放在这里';
+                errorDiv.style.display = 'block';
+                
+                // 1秒后隐藏错误提示
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 1000);
+            }
         }
 
         function removeFromStepTranslation(card, stepIndex) {
@@ -928,14 +985,62 @@
             const currentTranslation = Array.from(translationDiv.children)
                 .map(card => card.textContent)
                 .join(' ');
+            
+            // 获取或创建错误提示元素
+            let errorDiv = translationDiv.nextElementSibling;
+            if (!errorDiv || !errorDiv.classList.contains('translation-error')) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'translation-error';
+                translationDiv.parentNode.insertBefore(errorDiv, translationDiv.nextSibling);
+            }
+            
+            // 检查当前翻译是否是目标英文的开头部分
+            const targetEnglish = breakdownSteps[stepIndex].english;
+            const isStartCorrect = targetEnglish.startsWith(currentTranslation);
+            
+            if (currentTranslation === targetEnglish) {
+                // 答案完全正确
+                errorDiv.style.display = 'none';
+                translationDiv.style.backgroundColor = '#e8f5e9';
                 
-            if (currentTranslation === breakdownSteps[stepIndex].english) {
-                // 答案正确，显示下一步
+                // 显示下一步
                 if (stepIndex < breakdownSteps.length - 1) {
                     setTimeout(() => {
                         document.getElementById(`step-${stepIndex + 1}`).classList.add('active');
                     }, 500);
                 }
+            } else if (!isStartCorrect && currentTranslation.trim() !== '') {
+                // 答案错误
+                errorDiv.textContent = '顺序似乎不对，请重试';
+                errorDiv.style.display = 'block';
+                
+                // 为所有已选择的卡片添加抖动效果
+                const cards = translationDiv.children;
+                Array.from(cards).forEach(card => {
+                    card.classList.add('wrong');
+                    // 移除抖动效果，以便下次可以再次触发
+                    setTimeout(() => {
+                        card.classList.remove('wrong');
+                    }, 500);
+                });
+                
+                // 1秒后自动清空已选择的卡片
+                setTimeout(() => {
+                    while (translationDiv.firstChild) {
+                        const card = translationDiv.firstChild;
+                        const newCard = card.cloneNode(true);
+                        newCard.classList.remove('wrong');
+                        newCard.onclick = () => addToStepTranslation(newCard, stepIndex);
+                        document.querySelector(`#step-${stepIndex} .step-cards`).appendChild(newCard);
+                        card.remove();
+                    }
+                    errorDiv.style.display = 'none';
+                    translationDiv.style.backgroundColor = '';
+                }, 1000);
+            } else {
+                // 答案还不完整，但目前是正确的
+                errorDiv.style.display = 'none';
+                translationDiv.style.backgroundColor = '';
             }
         }
     </script>
