@@ -474,6 +474,7 @@
             stopReading();
             if (currentSentenceIndex > 0) {
                 currentSentenceIndex--;
+                resetExerciseArea();
                 await startExercise();
                 updateSentenceIndexDisplay();
             }
@@ -484,6 +485,7 @@
             stopReading();
             if (currentSentenceIndex < originalEnglishSentences.length - 1) {
                 currentSentenceIndex++;
+                resetExerciseArea();
                 await startExercise();
                 updateSentenceIndexDisplay();
             }
@@ -1041,6 +1043,29 @@
                 // 答案还不完整，但目前是正确的
                 errorDiv.style.display = 'none';
                 translationDiv.style.backgroundColor = '';
+            }
+        }
+
+        // 添加重置练习区域的函数
+        function resetExerciseArea() {
+            // 重置拆句练习相关状态
+            breakdownSteps = [];
+            currentBreakdownStep = 0;
+            
+            // 隐藏拆句练习区域
+            const breakdownArea = document.getElementById("breakdownArea");
+            if (breakdownArea) {
+                breakdownArea.style.display = 'none';
+            }
+            
+            // 显示原有的练习区域
+            document.getElementById("wordArea").style.display = 'block';
+            document.getElementById("translationArea").style.display = 'block';
+            
+            // 清空拆句练习的内容
+            const breakdownStepsDiv = document.getElementById("breakdownSteps");
+            if (breakdownStepsDiv) {
+                breakdownStepsDiv.innerHTML = '';
             }
         }
     </script>
