@@ -615,6 +615,11 @@
         }
 
         document.addEventListener('keydown', function(event) {
+            // 如果当前焦点在文本框内，不要阻止默认行为
+            if (document.activeElement.tagName === 'TEXTAREA') {
+                return;
+            }
+
             // 检查是否按下了 Command (Meta) 或 Ctrl 或 Alt + S
             if ((event.metaKey || event.ctrlKey || event.altKey) && event.key === 's') {
                 event.preventDefault(); // 阻止默认的行为
