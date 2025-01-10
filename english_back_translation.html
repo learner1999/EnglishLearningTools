@@ -192,7 +192,7 @@
         <!-- 输入区域 -->
         <div class="area" id="inputArea">
             <label for="englishArticle">英文文章:</label><br>
-            <textarea id="englishArticle" rows="4" placeholder="在这里输入英文文章.请注意,中英文文章中的每个句子都应��相应的顺序用句号或感叹号或问号分隔,否则可能会出现不匹配的问题."></textarea>
+            <textarea id="englishArticle" rows="4" placeholder="在这里输入英文文章.请注意,中英文文章中的每个句子都应相应的顺序用句号或感叹号或问号分隔,否则可能会出现不匹配的问题."></textarea>
             <label for="chineseTranslation">中文翻译（留空会自动翻译）:</label><br>
             <textarea id="chineseTranslation" rows="4" placeholder="在这里输入中文翻译."></textarea>
             <input type="checkbox" id="splitByNewline" style="margin-right: 5px;">
@@ -330,7 +330,7 @@
             startExercise();
         }
 
-        // 随机打乱数组元素���序
+        // 随机打乱数组元素顺序
         function shuffleArray(array) {
             for (var i = array.length - 1; i > 0; i--) {
                 var j = Math.floor(Math.random() * (i + 1));
@@ -344,6 +344,7 @@
         // 开始练习
         async function startExercise() {
             var englishArticle = document.getElementById("englishArticle").value.trim();
+            var chineseTranslation = document.getElementById("chineseTranslation").value.trim();
             
             // 预处理文本，保护常见缩写
             englishArticle = englishArticle
@@ -381,37 +382,13 @@
                     .replace(/U#K#/g, 'U.K.')
             );
 
-            var chineseTranslation = document.getElementById("chineseTranslation").value.trim();
-            var wordArea = document.getElementById("wordArea");
-            var translationArea = document.getElementById("translationArea");
-            var loadingIndicator = document.getElementById("loadingIndicator");
-
             if (englishArticle === '') {
                 return;
             }
 
             // 如果没有中文翻译，则在线获取翻译
             if (chineseTranslation === '') {
-                loadingIndicator.style.display = 'block'; // 显示加载提示
-                try {
-                    originalChineseTranslations = [];
-                    // 翻译当前句子
-                    const translation = await translateText(originalEnglishSentences[currentSentenceIndex]);
-                    if (translation) {
-                        originalChineseTranslations[currentSentenceIndex] = translation;
-                    } else {
-                        alert('翻译服务出错，请稍后重试');
-                        loadingIndicator.style.display = 'none'; // 隐藏加载提示
-                        return;
-                    }
-                } catch (error) {
-                    console.error('翻译出错:', error);
-                    alert('翻译服务出错，请稍后重试');
-                    loadingIndicator.style.display = 'none'; // 隐藏加载提示
-                    return;
-                } finally {
-                    loadingIndicator.style.display = 'none'; // 隐藏加载提示
-                }
+                await translateAllSentences();
             } else {
                 if (document.getElementById("splitByNewline").checked) {
                     originalChineseTranslations = chineseTranslation.split('\n').filter(sentence => sentence.trim() !== "");
@@ -420,6 +397,67 @@
                 }
             }
 
+            await displayCurrentSentence();
+
+            // 隐藏第一个容器并显示第二个容器
+            document.querySelectorAll('.container')[0].style.display = 'none';
+            document.querySelectorAll('.container')[1].style.display = 'block';
+
+            // 更新当前句子索引和总句子数量的显示
+            updateSentenceIndexDisplay();
+        }
+
+        // 新增函数：翻译所有句子
+        async function translateAllSentences() {
+            var loadingIndicator = document.getElementById("loadingIndicator");
+            loadingIndicator.style.display = 'block';
+            try {
+                const translationRequest = {
+                    sentences: originalEnglishSentences
+                };
+                
+                const response = await fetch(`${apiSettings.baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiSettings.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: apiSettings.model,
+                        messages: [
+                            {
+                                role: "system",
+                                content: "你是一个专业的翻译助手。请将英文句子数组翻译成中文句子数组，只返回JSON格式的翻译结果，格式为：{\"translations\": [\"中文句子1\", \"中文句子2\", ...]}。不要有任何其他内容。"
+                            },
+                            {
+                                role: "user",
+                                content: JSON.stringify(translationRequest)
+                            }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error?.message || '翻译服务出错');
+                }
+
+                let translationResult = JSON.parse(data.choices[0].message.content);
+                originalChineseTranslations = translationResult.translations;
+            } catch (error) {
+                console.error('翻译出错:', error);
+                alert('翻译服务出错，请稍后重试');
+                throw error;
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // 新增函数：显示当前句子
+        async function displayCurrentSentence() {
+            var wordArea = document.getElementById("wordArea");
+            var translationArea = document.getElementById("translationArea");
+            
             // 清空前一次练习的内容
             wordArea.innerHTML = '';
             translationArea.innerHTML = '';
@@ -428,8 +466,6 @@
             var chineseTranslation = originalChineseTranslations[currentSentenceIndex].trim();
 
             var englishWords = englishSentence.split(' '); // 拆分英文句子为单词数组
-            var chineseWords = chineseTranslation.split(' '); // 拆分中文翻译为单词数组
-
             englishWords = shuffleArray(englishWords); // 打乱英文单词顺序
 
             // 创建英文单词卡片
@@ -445,13 +481,6 @@
             chineseTranslationArea.innerText = chineseTranslation + "\n";
 
             checkSentence(); // 检查句子是否正确
-
-            // 隐藏第一个容器并显示第二个容器
-            document.querySelectorAll('.container')[0].style.display = 'none';
-            document.querySelectorAll('.container')[1].style.display = 'block';
-
-            // 更新当前句子索引和总句子数量的显示
-            updateSentenceIndexDisplay();
         }
 
         function updateSentenceIndexDisplay() {
@@ -475,7 +504,7 @@
             if (currentSentenceIndex > 0) {
                 currentSentenceIndex--;
                 resetExerciseArea();
-                await startExercise();
+                await displayCurrentSentence();
                 updateSentenceIndexDisplay();
             }
         }
@@ -486,7 +515,7 @@
             if (currentSentenceIndex < originalEnglishSentences.length - 1) {
                 currentSentenceIndex++;
                 resetExerciseArea();
-                await startExercise();
+                await displayCurrentSentence();
                 updateSentenceIndexDisplay();
             }
         }
